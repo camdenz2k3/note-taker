@@ -1,16 +1,14 @@
 const PORT = process.env.PORT || 3000;
 const fs = require('fs');
 const path = require('path');
-
 const express = require('express');
 const app = express();
-
-const allNotes = require('./db/db.json');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
+//get route
 app.get('/api/notes', (req, res) => {
     fs.readFile(path.join(__dirname, "db", "db.json"), 'utf-8', function(err, data) {
         if (err) {
@@ -30,7 +28,7 @@ app.get('/notes', (req, res) => {
     res.sendFile(path.join(__dirname, './public/notes.html'));
 });
 
-
+// post route
 app.post('/api/notes', (req, res) => {
     const {title, text} = req.body
 
@@ -39,7 +37,7 @@ app.post('/api/notes', (req, res) => {
       return
     }
     const newNote = {
-        id: shortid.generate(),
+        id: Math.random(),
         ...req.body
     }
     fs.readFile(path.join(__dirname, "db", "db.json"), 'utf-8', function(err, data) {
@@ -60,25 +58,31 @@ app.post('/api/notes', (req, res) => {
     })
 });
 
-function deleteNote(id, notesArray) {
-    for (let i = 0; i < notesArray.length; i++) {
-        let note = notesArray[i];
-
-        if (note.id == id) {
-            notesArray.splice(i, 1);
-            fs.writeFileSync(
-                path.join(__dirname, './db/db.json'),
-                JSON.stringify(notesArray, null, 2)
-            );
-
-            break;
-        }
-    }
-}
 
 app.delete('/api/notes/:id', (req, res) => {
-    deleteNote(req.params.id, allNotes);
-    res.json(true);
+
+    if(!id) {
+     res.status(400).json({ error: "We need an id"})
+     return
+   }
+ 
+   fs.readFile(path.join(__dirname, "db", "db.json"), "utf-8", function(err, data) {
+    if (err) {
+        res.status(500).json(err)
+        return
+    }
+     const notes = JSON.parse(data)
+     const id = req.params.id
+     const updatedNotes = notes.filter(note => id != note.id)
+ 
+     fs.writeFile(path.join(__dirname, "db", "db.json"), JSON.stringify(updatedNotes), function(err) {
+         if (err) {
+             res.status(500).json(err)
+             return
+         }
+         res.json(updatedNotes)
+     })
+   })
 });
 
 app.listen(PORT, () => {
