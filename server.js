@@ -60,12 +60,6 @@ app.post('/api/notes', (req, res) => {
 
 
 app.delete('/api/notes/:id', (req, res) => {
-
-    if(!id) {
-     res.status(400).json({ error: "We need an id"})
-     return
-   }
- 
    fs.readFile(path.join(__dirname, "db", "db.json"), "utf-8", function(err, data) {
     if (err) {
         res.status(500).json(err)
